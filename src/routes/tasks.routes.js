@@ -1,5 +1,8 @@
 const express = require("express");
+
 const router = express.Router();
+
+const authenticateToken = require("../middleware/auth.middleware");
 
 const {
   createTask,
@@ -8,6 +11,9 @@ const {
   updateTask,
   deleteTask,
 } = require("../controllers/tasks.controller");
+
+// Proteger todas las rutas de tareas
+router.use(authenticateToken);
 
 // Obtener todas las tareas
 router.get("/", getTasks);

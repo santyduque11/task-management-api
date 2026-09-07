@@ -1,12 +1,21 @@
 const prisma = require("../config/prisma");
+const bcrypt = require("bcrypt");
 
 // Obtener todos los usuarios
 const getUsers = async (req, res) => {
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
 
     res.json(users);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       error: "Error al obtener los usuarios",
     });
@@ -27,6 +36,11 @@ const getUserById = async (req, res) => {
 
     const user = await prisma.user.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
     });
 
     if (!user) {
@@ -37,6 +51,8 @@ const getUserById = async (req, res) => {
 
     res.json(user);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       error: "Error al obtener el usuario",
     });
@@ -46,12 +62,12 @@ const getUserById = async (req, res) => {
 // Crear un usuario
 const createUser = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, password } = req.body;
 
     // Validar campos obligatorios
-    if (!name || !email) {
+    if (!name || !email || !password) {
       return res.status(400).json({
-        error: "El nombre y el email son obligatorios",
+        error: "El nombre, el email y la contraseña son obligatorios",
       });
     }
 
@@ -64,15 +80,27 @@ const createUser = async (req, res) => {
       });
     }
 
+    // Generar hash de la contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Crear usuario
     const user = await prisma.user.create({
       data: {
         name,
         email,
+        password: hashedPassword,
       },
     });
 
-    res.status(201).json(user);
+    // Nunca devolver la contraseña ni el hash
+    res.status(201).json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    });
   } catch (error) {
+    console.error(error);
+
     // Email duplicado
     if (error.code === "P2002") {
       return res.status(409).json({
@@ -122,10 +150,17 @@ const updateUser = async (req, res) => {
         name,
         email,
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
     });
 
     res.json(user);
   } catch (error) {
+    console.error(error);
+
     // Usuario no encontrado
     if (error.code === "P2025") {
       return res.status(404).json({
@@ -166,6 +201,8 @@ const deleteUser = async (req, res) => {
       message: "Usuario eliminado correctamente",
     });
   } catch (error) {
+    console.error(error);
+
     // Usuario no encontrado
     if (error.code === "P2025") {
       return res.status(404).json({

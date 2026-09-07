@@ -3,12 +3,14 @@ const prisma = require("../config/prisma");
 // Crear una tarea
 const createTask = async (req, res) => {
   try {
-    const { title, description, userId } = req.body;
+    const { title, description } = req.body;
+
+    const userId = req.user.userId;
 
     // Validar campos obligatorios
-    if (!title || !userId) {
+    if (!title) {
       return res.status(400).json({
-        error: "El título y el usuario son obligatorios",
+        error: "El título es obligatorio",
       });
     }
 
@@ -43,7 +45,11 @@ const createTask = async (req, res) => {
 // Obtener todas las tareas
 const getTasks = async (req, res) => {
   try {
-    const tasks = await prisma.task.findMany();
+    const tasks = await prisma.task.findMany({
+      where: {
+        userId: Number(req.user.userId),
+      },
+    });
 
     res.json(tasks);
   } catch (error) {
@@ -73,6 +79,13 @@ const getTaskById = async (req, res) => {
     if (!task) {
       return res.status(404).json({
         error: "Tarea no encontrada",
+      });
+    }
+
+    // Verificar que la tarea pertenezca al usuario autenticado
+    if (task.userId !== Number(req.user.userId)) {
+      return res.status(403).json({
+        error: "No tienes permiso para acceder a esta tarea",
       });
     }
 
@@ -112,6 +125,24 @@ const updateTask = async (req, res) => {
       });
     }
 
+    // Buscar la tarea existente
+    const existingTask = await prisma.task.findUnique({
+      where: { id },
+    });
+
+    if (!existingTask) {
+      return res.status(404).json({
+        error: "Tarea no encontrada",
+      });
+    }
+
+    // Verificar que la tarea pertenezca al usuario autenticado
+    if (existingTask.userId !== Number(req.user.userId)) {
+      return res.status(403).json({
+        error: "No tienes permiso para modificar esta tarea",
+      });
+    }
+
     const task = await prisma.task.update({
       where: { id },
       data: {
@@ -123,13 +154,6 @@ const updateTask = async (req, res) => {
 
     res.json(task);
   } catch (error) {
-    // Tarea no encontrada
-    if (error.code === "P2025") {
-      return res.status(404).json({
-        error: "Tarea no encontrada",
-      });
-    }
-
     res.status(500).json({
       error: "Error al actualizar la tarea",
     });
@@ -148,6 +172,24 @@ const deleteTask = async (req, res) => {
       });
     }
 
+    // Buscar la tarea existente
+    const existingTask = await prisma.task.findUnique({
+      where: { id },
+    });
+
+    if (!existingTask) {
+      return res.status(404).json({
+        error: "Tarea no encontrada",
+      });
+    }
+
+    // Verificar que la tarea pertenezca al usuario autenticado
+    if (existingTask.userId !== Number(req.user.userId)) {
+      return res.status(403).json({
+        error: "No tienes permiso para eliminar esta tarea",
+      });
+    }
+
     await prisma.task.delete({
       where: { id },
     });
@@ -156,13 +198,6 @@ const deleteTask = async (req, res) => {
       message: "Tarea eliminada correctamente",
     });
   } catch (error) {
-    // Tarea no encontrada
-    if (error.code === "P2025") {
-      return res.status(404).json({
-        error: "Tarea no encontrada",
-      });
-    }
-
     res.status(500).json({
       error: "Error al eliminar la tarea",
     });
