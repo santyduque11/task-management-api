@@ -64,12 +64,23 @@ const createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validar campos obligatorios
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        error: "El nombre, el email y la contraseña son obligatorios",
-      });
-    }
+if (!name || !email || !password) {
+  return res.status(400).json({
+    error: "El nombre, el email y la contraseña son obligatorios",
+  });
+}
+
+if (name.trim().length < 3) {
+  return res.status(400).json({
+    error: "El nombre debe tener al menos 3 caracteres",
+  });
+}
+
+if (password.length < 8) {
+  return res.status(400).json({
+    error: "La contraseña debe tener al menos 8 caracteres",
+  });
+}
 
     // Validar formato del email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

@@ -24,10 +24,14 @@ const login = async (req, res) => {
         error: "Credenciales inválidas",
       });
     }
-console.log("¿Existe password?:", !!user.password);
-console.log("Longitud del password:", user.password ? user.password.length : null);
-   
-// Comparar contraseña con el hash almacenado
+
+    // Comparar contraseña con el hash almacenado
+    if (!user.password) {
+      return res.status(401).json({
+        error: "Credenciales inválidas",
+      });
+    }
+
     const passwordValid = await bcrypt.compare(password, user.password);
 
     if (!passwordValid) {
