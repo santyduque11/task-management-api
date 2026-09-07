@@ -109,19 +109,20 @@ if (password.length < 8) {
       name: user.name,
       email: user.email,
     });
-  } catch (error) {
-    console.error(error);
+} catch (error) {
 
-    // Email duplicado
-    if (error.code === "P2002") {
-      return res.status(409).json({
-        error: "El email ya está registrado",
-      });
-    }
-
-    res.status(500).json({
-      error: "Error al crear el usuario",
+  // Email duplicado
+  if (error.code === "P2002") {
+    return res.status(409).json({
+      error: "El correo electrónico ya está registrado",
     });
+  }
+
+  console.error(error);
+
+  return res.status(500).json({
+    error: "Error interno del servidor",
+  });
   }
 };
 

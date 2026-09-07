@@ -12,6 +12,4 @@ app.use("/api/users", usersRoutes);
 app.use("/api/tasks", tasksRoutes);
 app.use("/api/auth", authRoutes);
 
-app.listen(3000, () => {
-  console.log("Servidor ejecutándose en http://localhost:3000");
-});
+module.exports = app;

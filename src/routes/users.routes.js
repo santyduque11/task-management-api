@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -9,19 +10,21 @@ const {
   deleteUser,
 } = require("../controllers/users.controller");
 
+const authenticateToken = require("../middleware/auth.middleware");
+
 // Obtener todos los usuarios
-router.get("/", getUsers);
+router.get("/", authenticateToken, getUsers);
 
 // Obtener un usuario por ID
-router.get("/:id", getUserById);
+router.get("/:id", authenticateToken, getUserById);
 
 // Crear un usuario
-router.post("/", createUser);
+router.post("/", authenticateToken, createUser);
 
 // Actualizar un usuario
-router.put("/:id", updateUser);
+router.put("/:id", authenticateToken, updateUser);
 
 // Eliminar un usuario
-router.delete("/:id", deleteUser);
+router.delete("/:id", authenticateToken, deleteUser);
 
 module.exports = router;
