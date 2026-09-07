@@ -7,10 +7,29 @@ const createTask = async (req, res) => {
 
     const userId = req.user.userId;
 
-    // Validar campos obligatorios
+    // Validar título
     if (!title) {
       return res.status(400).json({
         error: "El título es obligatorio",
+      });
+    }
+
+    if (typeof title !== "string") {
+      return res.status(400).json({
+        error: "El título debe ser un texto",
+      });
+    }
+
+    if (title.trim().length < 3) {
+      return res.status(400).json({
+        error: "El título debe tener al menos 3 caracteres",
+      });
+    }
+
+    // Validar descripción
+    if (description !== undefined && typeof description !== "string") {
+      return res.status(400).json({
+        error: "La descripción debe ser un texto",
       });
     }
 
@@ -111,10 +130,29 @@ const updateTask = async (req, res) => {
 
     const { title, description, completed } = req.body;
 
-    // Validar campos obligatorios
+    // Validar título
     if (!title) {
       return res.status(400).json({
         error: "El título es obligatorio",
+      });
+    }
+
+    if (typeof title !== "string") {
+      return res.status(400).json({
+        error: "El título debe ser un texto",
+      });
+    }
+
+    if (title.trim().length < 3) {
+      return res.status(400).json({
+        error: "El título debe tener al menos 3 caracteres",
+      });
+    }
+
+    // Validar descripción
+    if (description !== undefined && typeof description !== "string") {
+      return res.status(400).json({
+        error: "La descripción debe ser un texto",
       });
     }
 
