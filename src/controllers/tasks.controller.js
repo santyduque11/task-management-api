@@ -1,39 +1,15 @@
 const prisma = require("../config/prisma");
 
 // Crear una tarea
+
 const createTask = async (req, res) => {
   try {
     const { title, description } = req.body;
 
     const userId = req.user.userId;
 
-    // Validar título
-    if (!title) {
-      return res.status(400).json({
-        error: "El título es obligatorio",
-      });
-    }
-
-    if (typeof title !== "string") {
-      return res.status(400).json({
-        error: "El título debe ser un texto",
-      });
-    }
-
-    if (title.trim().length < 3) {
-      return res.status(400).json({
-        error: "El título debe tener al menos 3 caracteres",
-      });
-    }
-
-    // Validar descripción
-    if (description !== undefined && typeof description !== "string") {
-      return res.status(400).json({
-        error: "La descripción debe ser un texto",
-      });
-    }
-
     // Verificar que el usuario exista
+
     const user = await prisma.user.findUnique({
       where: { id: Number(userId) },
     });
@@ -45,6 +21,7 @@ const createTask = async (req, res) => {
     }
 
     // Crear la tarea
+
     const task = await prisma.task.create({
       data: {
         title,
@@ -55,6 +32,8 @@ const createTask = async (req, res) => {
 
     res.status(201).json(task);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       error: "Error al crear la tarea",
     });
@@ -62,6 +41,7 @@ const createTask = async (req, res) => {
 };
 
 // Obtener todas las tareas
+
 const getTasks = async (req, res) => {
   try {
     const tasks = await prisma.task.findMany({
@@ -72,6 +52,8 @@ const getTasks = async (req, res) => {
 
     res.json(tasks);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       error: "Error al obtener las tareas",
     });
@@ -79,22 +61,15 @@ const getTasks = async (req, res) => {
 };
 
 // Obtener una tarea por ID
+
 const getTaskById = async (req, res) => {
   try {
     const id = Number(req.params.id);
-
-    // Validar que el ID sea un número válido
-    if (Number.isNaN(id)) {
-      return res.status(400).json({
-        error: "El ID debe ser un número válido",
-      });
-    }
 
     const task = await prisma.task.findUnique({
       where: { id },
     });
 
-    // Verificar que la tarea exista
     if (!task) {
       return res.status(404).json({
         error: "Tarea no encontrada",
@@ -102,6 +77,7 @@ const getTaskById = async (req, res) => {
     }
 
     // Verificar que la tarea pertenezca al usuario autenticado
+
     if (task.userId !== Number(req.user.userId)) {
       return res.status(403).json({
         error: "No tienes permiso para acceder a esta tarea",
@@ -110,6 +86,8 @@ const getTaskById = async (req, res) => {
 
     res.json(task);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       error: "Error al obtener la tarea",
     });
@@ -117,53 +95,15 @@ const getTaskById = async (req, res) => {
 };
 
 // Actualizar una tarea
+
 const updateTask = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    // Validar que el ID sea un número válido
-    if (Number.isNaN(id)) {
-      return res.status(400).json({
-        error: "El ID debe ser un número válido",
-      });
-    }
-
     const { title, description, completed } = req.body;
 
-    // Validar título
-    if (!title) {
-      return res.status(400).json({
-        error: "El título es obligatorio",
-      });
-    }
-
-    if (typeof title !== "string") {
-      return res.status(400).json({
-        error: "El título debe ser un texto",
-      });
-    }
-
-    if (title.trim().length < 3) {
-      return res.status(400).json({
-        error: "El título debe tener al menos 3 caracteres",
-      });
-    }
-
-    // Validar descripción
-    if (description !== undefined && typeof description !== "string") {
-      return res.status(400).json({
-        error: "La descripción debe ser un texto",
-      });
-    }
-
-    // Validar completed
-    if (typeof completed !== "boolean") {
-      return res.status(400).json({
-        error: "El campo completed debe ser true o false",
-      });
-    }
-
     // Buscar la tarea existente
+
     const existingTask = await prisma.task.findUnique({
       where: { id },
     });
@@ -175,6 +115,7 @@ const updateTask = async (req, res) => {
     }
 
     // Verificar que la tarea pertenezca al usuario autenticado
+
     if (existingTask.userId !== Number(req.user.userId)) {
       return res.status(403).json({
         error: "No tienes permiso para modificar esta tarea",
@@ -192,6 +133,8 @@ const updateTask = async (req, res) => {
 
     res.json(task);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       error: "Error al actualizar la tarea",
     });
@@ -199,18 +142,13 @@ const updateTask = async (req, res) => {
 };
 
 // Eliminar una tarea
+
 const deleteTask = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    // Validar que el ID sea un número válido
-    if (Number.isNaN(id)) {
-      return res.status(400).json({
-        error: "El ID debe ser un número válido",
-      });
-    }
-
     // Buscar la tarea existente
+
     const existingTask = await prisma.task.findUnique({
       where: { id },
     });
@@ -222,6 +160,7 @@ const deleteTask = async (req, res) => {
     }
 
     // Verificar que la tarea pertenezca al usuario autenticado
+
     if (existingTask.userId !== Number(req.user.userId)) {
       return res.status(403).json({
         error: "No tienes permiso para eliminar esta tarea",
@@ -236,6 +175,8 @@ const deleteTask = async (req, res) => {
       message: "Tarea eliminada correctamente",
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       error: "Error al eliminar la tarea",
     });

@@ -4,6 +4,14 @@ const router = express.Router();
 
 const authenticateToken = require("../middleware/auth.middleware");
 
+const validate = require("../middleware/validation.middleware");
+
+const {
+  createTaskSchema,
+  updateTaskSchema,
+  taskIdSchema,
+} = require("../validators/task.validator");
+
 const {
   createTask,
   getTasks,
@@ -65,7 +73,11 @@ router.get("/", getTasks);
  *       404:
  *         description: Tarea no encontrada
  */
-router.get("/:id", getTaskById);
+router.get(
+  "/:id",
+  validate(taskIdSchema, "params"),
+  getTaskById
+);
 
 /**
  * @swagger
@@ -101,7 +113,11 @@ router.get("/:id", getTaskById);
  *       401:
  *         description: No autorizado. Se requiere un token JWT.
  */
-router.post("/", createTask);
+router.post(
+  "/",
+  validate(createTaskSchema),
+  createTask
+);
 
 /**
  * @swagger
@@ -147,7 +163,12 @@ router.post("/", createTask);
  *       404:
  *         description: Tarea no encontrada
  */
-router.put("/:id", updateTask);
+router.put(
+  "/:id",
+  validate(taskIdSchema, "params"),
+  validate(updateTaskSchema),
+  updateTask
+);
 
 /**
  * @swagger
@@ -175,6 +196,10 @@ router.put("/:id", updateTask);
  *       404:
  *         description: Tarea no encontrada
  */
-router.delete("/:id", deleteTask);
+router.delete(
+  "/:id",
+  validate(taskIdSchema, "params"),
+  deleteTask
+);
 
 module.exports = router;
