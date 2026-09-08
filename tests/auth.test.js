@@ -19,6 +19,12 @@ describe("Authentication API", () => {
       "email",
       "testbackend@example.com"
     );
+
+    // Verificar que el usuario tenga un rol
+
+    expect(response.body.user).toHaveProperty("role");
+
+    expect(response.body.user.role).toBe("USER");
   });
 
   test("POST /api/auth/login debe rechazar credenciales incompletas", async () => {
