@@ -30,14 +30,6 @@ const getUserById = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    // Validar que el ID sea un número válido
-
-    if (Number.isNaN(id)) {
-      return res.status(400).json({
-        error: "El ID debe ser un número válido",
-      });
-    }
-
     const user = await prisma.user.findUnique({
       where: { id },
 
@@ -114,14 +106,6 @@ const updateUser = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    // Validar que el ID sea un número válido
-
-    if (Number.isNaN(id)) {
-      return res.status(400).json({
-        error: "El ID debe ser un número válido",
-      });
-    }
-
     const { name, email } = req.body;
 
     const user = await prisma.user.update({
@@ -170,14 +154,6 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const id = Number(req.params.id);
-
-    // Validar que el ID sea un número válido
-
-    if (Number.isNaN(id)) {
-      return res.status(400).json({
-        error: "El ID debe ser un número válido",
-      });
-    }
 
     await prisma.user.delete({
       where: { id },

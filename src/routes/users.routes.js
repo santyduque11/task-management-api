@@ -15,6 +15,7 @@ const authenticateToken = require("../middleware/auth.middleware");
 const {
   createUserSchema,
   updateUserSchema,
+  userIdSchema,
 } = require("../validators/user.validator");
 
 const validate = require("../middleware/validation.middleware");
@@ -70,7 +71,12 @@ router.get("/", authenticateToken, getUsers);
  *       404:
  *         description: Usuario no encontrado
  */
-router.get("/:id", authenticateToken, getUserById);
+router.get(
+  "/:id",
+  authenticateToken,
+  validate(userIdSchema, "params"),
+  getUserById
+);
 
 /**
  * @swagger
@@ -159,6 +165,7 @@ router.post("/", validate(createUserSchema), createUser);
 router.put(
   "/:id",
   authenticateToken,
+  validate(userIdSchema, "params"),
   validate(updateUserSchema),
   updateUser
 );
@@ -189,6 +196,11 @@ router.put(
  *       404:
  *         description: Usuario no encontrado
  */
-router.delete("/:id", authenticateToken, deleteUser);
+router.delete(
+  "/:id",
+  authenticateToken,
+  validate(userIdSchema, "params"),
+  deleteUser
+);
 
 module.exports = router;

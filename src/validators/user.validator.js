@@ -24,7 +24,16 @@ const updateUserSchema = z.object({
     .string("El nombre y el email son obligatorios")
     .email("El email no tiene un formato válido"),
 });
+const userIdSchema = z.object({
+  id: z
+    .string("El ID es obligatorio")
+    .regex(/^\d+$/, "El ID debe ser un número válido"),
+});
+
 module.exports = {
+
   createUserSchema,
   updateUserSchema,
+  userIdSchema,
+
 };
