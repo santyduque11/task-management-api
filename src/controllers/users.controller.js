@@ -1,183 +1,111 @@
 const prisma = require("../config/prisma");
-
+const asyncHandler = require("../middleware/asyncHandler");
 const bcrypt = require("bcrypt");
 
 // Obtener todos los usuarios
 
-const getUsers = async (req, res) => {
-  try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    });
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
 
-    res.json(users);
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Error al obtener los usuarios",
-    });
-  }
-};
+  res.json(users);
+});
 
 // Obtener un usuario por ID
 
-const getUserById = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+const getUserById = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
 
-    const user = await prisma.user.findUnique({
-      where: { id },
+  const user = await prisma.user.findUnique({
+    where: { id },
 
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    });
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
 
-    if (!user) {
-      return res.status(404).json({
-        error: "Usuario no encontrado",
-      });
-    }
-
-    res.json(user);
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Error al obtener el usuario",
+  if (!user) {
+    return res.status(404).json({
+      error: "Usuario no encontrado",
     });
   }
-};
+
+  res.json(user);
+});
 
 // Crear un usuario
 
-const createUser = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+const createUser = asyncHandler(async (req, res) => {
+  const { name, email, password } = req.body;
 
-    // Generar hash de la contraseña
+  // Generar hash de la contraseña
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Crear usuario
+  // Crear usuario
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-    });
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+    },
+  });
 
-    // Nunca devolver la contraseña ni el hash
+  // Nunca devolver la contraseña ni el hash
 
-    res.status(201).json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    });
-  } catch (error) {
-    // Email duplicado
-
-    if (error.code === "P2002") {
-      return res.status(409).json({
-        error: "El correo electrónico ya está registrado",
-      });
-    }
-
-    console.error(error);
-
-    return res.status(500).json({
-      error: "Error interno del servidor",
-    });
-  }
-};
+  res.status(201).json({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+  });
+});
 
 // Actualizar un usuario
 
-const updateUser = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+const updateUser = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
 
-    const { name, email } = req.body;
+  const { name, email } = req.body;
 
-    const user = await prisma.user.update({
-      where: { id },
+  const user = await prisma.user.update({
+    where: { id },
 
-      data: {
-        name,
-        email,
-      },
+    data: {
+      name,
+      email,
+    },
 
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    });
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
 
-    res.json(user);
-  } catch (error) {
-    console.error(error);
-
-    // Usuario no encontrado
-
-    if (error.code === "P2025") {
-      return res.status(404).json({
-        error: "Usuario no encontrado",
-      });
-    }
-
-    // Email duplicado
-
-    if (error.code === "P2002") {
-      return res.status(409).json({
-        error: "El email ya está registrado",
-      });
-    }
-
-    res.status(500).json({
-      error: "Error al actualizar el usuario",
-    });
-  }
-};
+  res.json(user);
+});
 
 // Eliminar un usuario
 
-const deleteUser = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+const deleteUser = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
 
-    await prisma.user.delete({
-      where: { id },
-    });
+  await prisma.user.delete({
+    where: { id },
+  });
 
-    res.json({
-      message: "Usuario eliminado correctamente",
-    });
-  } catch (error) {
-    console.error(error);
-
-    // Usuario no encontrado
-
-    if (error.code === "P2025") {
-      return res.status(404).json({
-        error: "Usuario no encontrado",
-      });
-    }
-
-    res.status(500).json({
-      error: "Error al eliminar el usuario",
-    });
-  }
-};
+  res.json({
+    message: "Usuario eliminado correctamente",
+  });
+});
 
 module.exports = {
   getUsers,
