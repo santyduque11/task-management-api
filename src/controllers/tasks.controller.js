@@ -33,16 +33,61 @@ const createTask = asyncHandler(async (req, res) => {
   res.status(201).json(task);
 });
 
-// Obtener todas las tareas
+// Obtener todas las tareas con paginación y filtros
 
 const getTasks = asyncHandler(async (req, res) => {
-  const tasks = await prisma.task.findMany({
-    where: {
-      userId: Number(req.user.userId),
+  const userId = Number(req.user.userId);
+
+  // Obtener parámetros de consulta ya validados por Zod
+
+  const { page, limit, completed } = req.validatedQuery;
+
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+
+  // Calcular cuántos registros debemos saltar
+
+  const skip = (pageNumber - 1) * limitNumber;
+
+  // Construir el filtro de búsqueda
+
+  const where = {
+    userId,
+  };
+
+  // Aplicar filtro por estado si fue enviado
+
+  if (completed !== undefined) {
+    where.completed = completed;
+  }
+
+  // Obtener las tareas y el total de tareas
+
+  const [tasks, total] = await Promise.all([
+    prisma.task.findMany({
+      where,
+      skip,
+      take: limitNumber,
+    }),
+
+    prisma.task.count({
+      where,
+    }),
+  ]);
+
+  // Calcular el total de páginas
+
+  const totalPages = Math.ceil(total / limitNumber);
+
+  res.json({
+    data: tasks,
+    pagination: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPages,
     },
   });
-
-  res.json(tasks);
 });
 
 // Obtener una tarea por ID

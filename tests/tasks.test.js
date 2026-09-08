@@ -19,13 +19,85 @@ beforeAll(async () => {
 });
 
 describe("Tasks API", () => {
-  test("GET /api/tasks debe devolver las tareas del usuario autenticado", async () => {
+  test("GET /api/tasks debe devolver las tareas paginadas del usuario autenticado", async () => {
     const response = await request(app)
-      .get("/api/tasks")
+      .get("/api/tasks?page=1&limit=10")
       .set("Authorization", `Bearer ${token}`);
 
     expect(response.statusCode).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
+
+    expect(response.body).toHaveProperty("data");
+    expect(response.body).toHaveProperty("pagination");
+
+    expect(Array.isArray(response.body.data)).toBe(true);
+
+    expect(response.body.pagination).toHaveProperty("page", 1);
+    expect(response.body.pagination).toHaveProperty("limit", 10);
+    expect(response.body.pagination).toHaveProperty("total");
+    expect(response.body.pagination).toHaveProperty("totalPages");
+  });
+
+test("GET /api/tasks?completed=true debe devolver solo tareas completadas", async () => {
+  const response = await request(app)
+    .get("/api/tasks?page=1&limit=10&completed=true")
+    .set("Authorization", `Bearer ${token}`);
+
+  expect(response.statusCode).toBe(200);
+
+  expect(response.body).toHaveProperty("data");
+  expect(Array.isArray(response.body.data)).toBe(true);
+
+  response.body.data.forEach((task) => {
+    expect(task.completed).toBe(true);
+  });
+});
+
+  test("GET /api/tasks debe rechazar una página menor que 1", async () => {
+    const response = await request(app)
+      .get("/api/tasks?page=0&limit=10")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty(
+      "error",
+      "La página debe ser mayor o igual a 1"
+    );
+  });
+
+  test("GET /api/tasks debe rechazar un límite menor que 1", async () => {
+    const response = await request(app)
+      .get("/api/tasks?page=1&limit=0")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty(
+      "error",
+      "El límite debe ser mayor o igual a 1"
+    );
+  });
+
+  test("GET /api/tasks debe rechazar un límite mayor que 100", async () => {
+    const response = await request(app)
+      .get("/api/tasks?page=1&limit=101")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty(
+      "error",
+      "El límite no puede superar 100"
+    );
+  });
+
+  test("GET /api/tasks debe rechazar una página que no sea numérica", async () => {
+    const response = await request(app)
+      .get("/api/tasks?page=abc&limit=10")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty(
+      "error",
+      "La página debe ser un número"
+    );
   });
 
   test("POST /api/tasks debe crear una tarea correctamente", async () => {

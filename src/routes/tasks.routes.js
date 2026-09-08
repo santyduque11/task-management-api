@@ -13,6 +13,16 @@ const {
 } = require("../validators/task.validator");
 
 const {
+  paginationSchema,
+} = require("../validators/pagination.validator");
+
+const {
+  taskFilterSchema,
+} = require("../validators/task-filter.validator");
+
+const taskQuerySchema = paginationSchema.merge(taskFilterSchema);
+
+const {
   createTask,
   getTasks,
   getTaskById,
@@ -34,18 +44,51 @@ router.use(authenticateToken);
  * /api/tasks:
  *   get:
  *     summary: Obtener todas las tareas
- *     description: Devuelve una lista de todas las tareas.
+ *     description: Devuelve una lista de todas las tareas con paginación y filtros.
  *     tags:
  *       - Tareas
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número de página
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Cantidad de tareas por página
+ *         example: 10
+ *       - in: query
+ *         name: completed
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar tareas por estado de completado
+ *         example: false
  *     responses:
  *       200:
  *         description: Lista de tareas obtenida correctamente
+ *       400:
+ *         description: Parámetros de consulta inválidos
  *       401:
  *         description: No autorizado. Se requiere un token JWT.
  */
-router.get("/", getTasks);
+router.get(
+  "/",
+  validate(taskQuerySchema, "query"),
+  getTasks
+);
 
 /**
  * @swagger
@@ -68,6 +111,8 @@ router.get("/", getTasks);
  *     responses:
  *       200:
  *         description: Tarea encontrada correctamente
+ *       400:
+ *         description: ID inválido
  *       401:
  *         description: No autorizado. Se requiere un token JWT.
  *       404:
@@ -149,7 +194,7 @@ router.post(
  *                 example: Estudiar Node.js
  *               description:
  *                 type: string
- *                 example: Repasar Express, JWT y Swagger
+ *                 example: Repasar Express y JWT
  *               completed:
  *                 type: boolean
  *                 example: true
@@ -191,6 +236,8 @@ router.put(
  *     responses:
  *       200:
  *         description: Tarea eliminada correctamente
+ *       400:
+ *         description: ID inválido
  *       401:
  *         description: No autorizado. Se requiere un token JWT.
  *       404:

@@ -3,7 +3,11 @@ const validate = (schema, property = "body") => {
     try {
       const validatedData = schema.parse(req[property]);
 
-      req[property] = validatedData;
+      if (property === "query") {
+        req.validatedQuery = validatedData;
+      } else {
+        req[property] = validatedData;
+      }
 
       next();
     } catch (error) {
