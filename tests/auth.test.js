@@ -15,19 +15,12 @@ describe("Authentication API", () => {
     expect(response.body).toHaveProperty("token");
     expect(response.body).toHaveProperty("user");
     expect(response.body.user).toHaveProperty("id", 11);
-    expect(response.body.user).toHaveProperty("email", "testbackend@example.com");
+    expect(response.body.user).toHaveProperty(
+      "email",
+      "testbackend@example.com"
+    );
   });
 
-  test("POST /api/auth/login debe rechazar credenciales incompletas", async () => {
-    const response = await request(app)
-      .post("/api/auth/login")
-      .send({
-        email: "testbackend@example.com",
-      });
-
-    expect(response.statusCode).toBe(400);
-  });
-  
   test("POST /api/auth/login debe rechazar credenciales incompletas", async () => {
     const response = await request(app)
       .post("/api/auth/login")
