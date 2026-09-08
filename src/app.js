@@ -6,6 +6,8 @@ const usersRoutes = require("./routes/users.routes");
 const tasksRoutes = require("./routes/tasks.routes");
 const authRoutes = require("./auth/auth.routes");
 
+const errorHandler = require("./middleware/errorHandler");
+
 const app = express();
 
 app.use(express.json());
@@ -22,5 +24,13 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/users", usersRoutes);
 app.use("/api/tasks", tasksRoutes);
 app.use("/api/auth", authRoutes);
+
+app.use((req, res, next) => {
+  const error = new Error("Not Found");
+  error.statusCode = 404;
+  next(error);
+});
+
+app.use(errorHandler);
 
 module.exports = app;
