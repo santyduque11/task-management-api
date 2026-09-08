@@ -2,9 +2,9 @@
 
 REST API for task and user management built with Node.js, Express, PostgreSQL and Prisma.
 
-This project implements user registration, secure password hashing, JWT authentication, protected routes, task authorization, automated testing and API documentation with Swagger/OpenAPI.
+This project implements user registration, secure password hashing, JWT authentication, protected routes, task authorization, input validation, automated testing, Swagger/OpenAPI documentation and Docker containerization.
 
-The main goal of this project is to demonstrate backend development practices including RESTful API design, authentication, database relationships, validation, error handling and automated testing.
+The main goal of this project is to demonstrate backend development practices including RESTful API design, authentication and authorization, relational database modeling, error handling, automated testing, API documentation and containerized development.
 
 ---
 
@@ -21,6 +21,8 @@ The main goal of this project is to demonstrate backend development practices in
 - Jest
 - Supertest
 - Nodemon
+- Docker
+- Docker Compose
 
 ---
 
@@ -40,11 +42,15 @@ The main goal of this project is to demonstrate backend development practices in
 - Input validation
 - Email format validation
 - Duplicate email handling
-- Error handling
-- HTTP status codes
+- Invalid credentials handling
+- Database error handling
+- HTTP status code management
 - Environment variables
 - Automated API tests
 - Swagger/OpenAPI documentation
+- Prisma database migrations
+- Docker containerization
+- Docker Compose development environment
 - Organized project structure
 
 ---
@@ -55,6 +61,10 @@ The main goal of this project is to demonstrate backend development practices in
 task-management-api/
 │
 ├── prisma/
+│   ├── migrations/
+│   │   ├── 20260908161832_init/
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
 │   └── schema.prisma
 │
 ├── src/
@@ -82,63 +92,60 @@ task-management-api/
 │
 ├── tests/
 │   ├── auth.test.js
+│   ├── tasks.test.js
 │   └── users.test.js
 │
-├── .env
+├── .dockerignore
 ├── .env.example
 ├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
 ├── package.json
 ├── package-lock.json
-└── prisma.config.ts
+├── prisma.config.ts
+└── README.md
 ```
 
 ---
 
-## ⚙️ Installation
+## ⚙️ Environment Variables
 
-### 1. Clone the repository
+Create a `.env` file in the project root.
+
+Example:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/task_management?schema=public"
+JWT_SECRET="your-secret-key"
+```
+
+Never upload your `.env` file, database credentials or JWT secrets to GitHub.
+
+The `.env.example` file is provided as a reference without real credentials.
+
+---
+
+# 💻 Running the Project Locally
+
+## 1. Clone the repository
 
 ```bash
 git clone https://github.com/santyduque11/task-management-api.git
 ```
 
-### 2. Enter the project directory
+## 2. Enter the project directory
 
 ```bash
 cd task-management-api
 ```
 
-### 3. Install dependencies
+## 3. Install dependencies
 
 ```bash
 npm install
 ```
 
----
-
-## 🔐 Environment Variables
-
-Create a `.env` file in the root directory.
-
-Use `.env.example` as a reference:
-
-```env
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/task_management?schema=public"
-
-JWT_SECRET="your_secret_key"
-```
-
-Replace the database credentials with your PostgreSQL configuration.
-
-`JWT_SECRET` is used to sign and verify JWT authentication tokens.
-
-> ⚠️ Never upload your `.env` file, database password or JWT secret to GitHub.
-
----
-
-## 🗄️ Database Setup
-
-This project uses PostgreSQL as the relational database.
+## 4. Configure PostgreSQL
 
 Make sure PostgreSQL is installed and running.
 
@@ -148,51 +155,114 @@ Create a database named:
 task_management
 ```
 
-Then synchronize the Prisma schema with the database:
+Configure the `DATABASE_URL` in your `.env` file.
 
-```bash
-npx prisma db push
-```
-
-Generate the Prisma Client:
+## 5. Generate Prisma Client
 
 ```bash
 npx prisma generate
 ```
 
+## 6. Apply database migrations
+
+```bash
+npx prisma migrate deploy
+```
+
+For development, when creating a new migration:
+
+```bash
+npx prisma migrate dev --name migration_name
+```
+
 ---
 
-## ▶️ Running the API
+# 🐳 Running with Docker
 
-### Development mode
+Docker Compose provides a complete development environment with:
 
-Run the API with Nodemon:
+- Node.js API
+- PostgreSQL database
+- Prisma ORM
+- Docker networking
+- Persistent PostgreSQL storage
 
-```bash
-npm run dev
-```
-
-### Production mode
-
-Run the server with:
+## 1. Build the Docker image
 
 ```bash
-npm start
+docker compose build
 ```
 
-The API will be available at:
+## 2. Start the containers
+
+```bash
+docker compose up -d
+```
+
+## 3. Check container status
+
+```bash
+docker compose ps
+```
+
+The expected services are:
+
+```text
+task-management-api
+task-management-db
+```
+
+The API is available at:
 
 ```text
 http://localhost:3000
 ```
 
+PostgreSQL is exposed on:
+
+```text
+localhost:5433
+```
+
+Inside the Docker network, the API connects to PostgreSQL using:
+
+```text
+postgres:5432
+```
+
+## 4. Apply database migrations
+
+```bash
+docker compose exec api npx prisma migrate deploy
+```
+
+## 5. View API logs
+
+```bash
+docker compose logs api
+```
+
+## 6. Stop the containers
+
+```bash
+docker compose down
+```
+
+The PostgreSQL data is stored in a Docker volume named:
+
+```text
+task-management-api_postgres_data
+```
+
+This allows the database data to persist when containers are stopped.
+
 ---
 
-## 📚 API Documentation
+# 📚 API Documentation
 
 This project includes interactive API documentation using Swagger/OpenAPI.
 
-After starting the server, open:
+After starting the API, open:
 
 ```text
 http://localhost:3000/api-docs
@@ -200,178 +270,140 @@ http://localhost:3000/api-docs
 
 Swagger allows you to:
 
-- Explore all API endpoints
+- Explore API endpoints
 - View request parameters
 - View request bodies
 - Test endpoints directly from the browser
 - Authenticate using JWT
 - Review HTTP responses
-
-### 🔐 Swagger Authentication
-
-For protected endpoints:
-
-1. Register a user using `POST /api/users`.
-2. Login using `POST /api/auth/login`.
-3. Copy the JWT token returned by the API.
-4. Click the `Authorize` button in Swagger.
-5. Enter the JWT token.
-6. Execute protected endpoints.
-
-Swagger will send the token using the appropriate authorization header.
+- Understand API schemas
 
 ---
 
-## 📌 API Endpoints
+# 🔐 Authentication
 
-### Users
+The API uses JSON Web Tokens (JWT) to protect private resources.
 
-| Method | Endpoint         | Authentication | Description         |
-| ------ | ---------------- | -------------- | ------------------- |
-| GET    | `/api/users`     | JWT            | Get all users       |
-| GET    | `/api/users/:id` | JWT            | Get a user by ID    |
-| POST   | `/api/users`     | Public         | Register a new user |
-| PUT    | `/api/users/:id` | JWT            | Update a user       |
-| DELETE | `/api/users/:id` | JWT            | Delete a user       |
-
-### Authentication
-
-| Method | Endpoint          | Authentication | Description                       |
-| ------ | ----------------- | -------------- | --------------------------------- |
-| POST   | `/api/auth/login` | Public         | Authenticate user and receive JWT |
-
-### Tasks
-
-All task endpoints require a valid JWT token.
-
-| Method | Endpoint         | Authentication | Description                    |
-| ------ | ---------------- | -------------- | ------------------------------ |
-| GET    | `/api/tasks`     | JWT            | Get authenticated user's tasks |
-| GET    | `/api/tasks/:id` | JWT            | Get a task by ID               |
-| POST   | `/api/tasks`     | JWT            | Create a new task              |
-| PUT    | `/api/tasks/:id` | JWT            | Update a task                  |
-| DELETE | `/api/tasks/:id` | JWT            | Delete a task                  |
-
----
-
-## 🔑 Authentication Flow
-
-The authentication process follows this flow:
+Authentication flow:
 
 ```text
-Register
-   ↓
-POST /api/users
-   ↓
-Password hashed with bcrypt
-   ↓
-User stored in PostgreSQL
-   ↓
-Login
-   ↓
+User
+ │
+ ▼
 POST /api/auth/login
-   ↓
-Credentials verified
-   ↓
-JWT generated
-   ↓
-JWT sent with protected requests
-   ↓
-Authentication middleware
-   ↓
-Controller
-   ↓
-Authorized resource
+ │
+ ▼
+JWT Token
+ │
+ ▼
+Authorization: Bearer <token>
+ │
+ ▼
+Authentication Middleware
+ │
+ ▼
+Protected Resource
 ```
 
-Protected requests use the following HTTP header:
+Protected endpoints require a valid JWT token.
 
-```text
-Authorization: Bearer YOUR_TOKEN
-```
+Swagger provides an `Authorize` button that can be used to authenticate requests.
 
 ---
 
-## 🔒 Authorization
+# 👤 Users API
 
-JWT authentication is used to protect private resources.
+Main endpoints:
 
-The authentication middleware verifies:
-
-- Presence of the token
-- Valid JWT signature
-- Token validity
-- Token expiration
-
-Task authorization is based on the authenticated user.
-
-A user can only access, update or delete tasks that belong to their account.
-
-For example, an authenticated user cannot modify another user's task.
+| Method | Endpoint         | Authentication |
+| ------ | ---------------- | -------------- |
+| POST   | `/api/users`     | No             |
+| GET    | `/api/users`     | Yes            |
+| GET    | `/api/users/:id` | Yes            |
+| PUT    | `/api/users/:id` | Yes            |
+| DELETE | `/api/users/:id` | Yes            |
 
 ---
 
-## 🔐 Password Security
+# 📋 Tasks API
 
-User passwords are never stored as plain text.
+Main endpoints:
 
-Before storing a password in the database, the API hashes it using `bcrypt`.
+| Method | Endpoint         | Authentication |
+| ------ | ---------------- | -------------- |
+| GET    | `/api/tasks`     | Yes            |
+| GET    | `/api/tasks/:id` | Yes            |
+| POST   | `/api/tasks`     | Yes            |
+| PUT    | `/api/tasks/:id` | Yes            |
+| DELETE | `/api/tasks/:id` | Yes            |
 
-During login, the provided password is compared against the stored hash.
-
-```text
-Plain password
-      ↓
-    bcrypt
-      ↓
-Password hash
-      ↓
-PostgreSQL
-```
+Tasks are associated with users and protected by authorization rules.
 
 ---
 
-## 🧪 Automated Testing
+# 🧪 Testing
 
-The project includes automated API tests using:
+The project uses Jest and Supertest for automated API testing.
 
-- Jest
-- Supertest
-
-Run the tests with:
+Run all tests:
 
 ```bash
 npm test
 ```
 
-Current test status:
-
-```text
-Test Suites: 2 passed, 2 total
-Tests:       11 passed, 11 total
-```
-
-### Watch mode
-
-Run Jest in watch mode:
+Run tests in watch mode:
 
 ```bash
 npm run test:watch
 ```
 
-### Test coverage
-
-Generate a test coverage report:
+Generate the coverage report:
 
 ```bash
 npm run test:coverage
 ```
 
-The tests cover authentication and user API functionality, including successful requests and error scenarios.
+The project currently contains automated tests for:
+
+- User registration
+- User retrieval
+- User updates
+- User deletion
+- User validation
+- Duplicate emails
+- Invalid IDs
+- Authentication
+- Login validation
+- Invalid credentials
+- Task CRUD operations
+- Authentication middleware
+- Protected routes
 
 ---
 
-## 🛡️ Validation and Error Handling
+# 📊 Test Coverage
+
+The project has automated test coverage for the main API functionality.
+
+Current test suite:
+
+```text
+Test Suites: 3 passed
+Tests:       33 passed
+```
+
+Coverage is approximately:
+
+```text
+Statements: 85%
+Branches:   76%
+Functions:  100%
+Lines:      85%
+```
+
+---
+
+# 🛡️ Validation and Error Handling
 
 The API handles different validation and error scenarios, including:
 
@@ -391,7 +423,7 @@ The API handles different validation and error scenarios, including:
 
 ---
 
-## 📊 HTTP Status Codes
+# 📊 HTTP Status Codes
 
 | Status Code | Description                                    |
 | ----------- | ---------------------------------------------- |
@@ -406,7 +438,7 @@ The API handles different validation and error scenarios, including:
 
 ---
 
-## 🏗️ Architecture
+# 🏗️ Architecture
 
 The application follows a layered backend architecture:
 
@@ -417,7 +449,7 @@ The application follows a layered backend architecture:
                        Routes
                          │
                          ▼
-                     Middleware
+                    Middleware
                          │
                          ▼
                     Controllers
@@ -431,7 +463,7 @@ The application follows a layered backend architecture:
 
 ### Routes
 
-Routes define the API endpoints and connect incoming requests with the appropriate controllers.
+Routes define API endpoints and connect incoming requests with the appropriate controllers.
 
 ### Middleware
 
@@ -451,7 +483,7 @@ PostgreSQL stores users, tasks and their relationships.
 
 ---
 
-## 🗃️ Database Relationship
+# 🗄️ Database Relationship
 
 The project uses a one-to-many relationship between users and tasks.
 
@@ -480,7 +512,7 @@ Task
 
 ---
 
-## 📦 NPM Scripts
+# 📦 NPM Scripts
 
 | Command                 | Description                           |
 | ----------------------- | ------------------------------------- |
@@ -492,9 +524,9 @@ Task
 
 ---
 
-## 🎯 Project Objective
+# 🎯 Project Objective
 
-This project was developed as a backend portfolio project to practice and demonstrate:
+This project was developed as a backend portfolio project to demonstrate practical knowledge in:
 
 - REST API development
 - Backend architecture
@@ -506,11 +538,15 @@ This project was developed as a backend portfolio project to practice and demons
 - Automated testing
 - API documentation
 - Error handling
+- Docker
+- Docker Compose
+- Database migrations
+- Git and GitHub
 - Clean project organization
 
 ---
 
-## 📚 What I Learned
+# 📚 What I Learned
 
 Through this project, I practiced:
 
@@ -532,11 +568,15 @@ Through this project, I practiced:
 - Writing automated API tests
 - Documenting APIs with Swagger/OpenAPI
 - Using environment variables
-- Organizing a backend project
+- Creating Prisma migrations
+- Containerizing applications with Docker
+- Managing services with Docker Compose
+- Working with persistent Docker volumes
+- Using Git and GitHub for version control
 
 ---
 
-## 🚀 Future Improvements
+# 🚀 Future Improvements
 
 Planned improvements for future versions include:
 
@@ -545,16 +585,17 @@ Planned improvements for future versions include:
 - Refresh token authentication
 - Role-based authorization
 - Improved centralized error handling
-- Database migrations and seed scripts
-- Docker containerization
+- Database seed scripts
 - CI/CD with GitHub Actions
 - API deployment to a cloud platform
 - Production environment configuration
 - Improved test coverage
+- Production Docker image optimization
+- Health checks for Docker services
 
 ---
 
-## 👨‍💻 Author
+# 👨‍💻 Author
 
 **Santiago Llano Duque**
 
@@ -562,8 +603,8 @@ Backend Development Junior
 
 GitHub:
 
-https://github.com/santyduque11
+https://github.com/santyduque11/task-management-api
 
 ---
 
-⭐ If you find this project interesting, feel free to explore the repository.
+⭐ If you find this project useful, feel free to explore the source code and API documentation.
