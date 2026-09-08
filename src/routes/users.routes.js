@@ -11,6 +11,7 @@ const {
 } = require("../controllers/users.controller");
 
 const authenticateToken = require("../middleware/auth.middleware");
+const requireRole = require("../middleware/requireRole");
 
 const {
   createUserSchema,
@@ -43,7 +44,12 @@ const validate = require("../middleware/validation.middleware");
  *       401:
  *         description: No autorizado. Se requiere un token JWT.
  */
-router.get("/", authenticateToken, getUsers);
+router.get(
+  "/",
+  authenticateToken,
+  requireRole("ADMIN"),
+  getUsers
+);
 
 /**
  * @swagger
@@ -75,6 +81,7 @@ router.get(
   "/:id",
   authenticateToken,
   validate(userIdSchema, "params"),
+  requireRole("ADMIN"),
   getUserById
 );
 
@@ -167,6 +174,7 @@ router.put(
   authenticateToken,
   validate(userIdSchema, "params"),
   validate(updateUserSchema),
+  requireRole("ADMIN"),
   updateUser
 );
 
@@ -200,6 +208,7 @@ router.delete(
   "/:id",
   authenticateToken,
   validate(userIdSchema, "params"),
+  requireRole("ADMIN"),
   deleteUser
 );
 

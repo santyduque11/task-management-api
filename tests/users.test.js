@@ -1,37 +1,84 @@
 const request = require("supertest");
 const app = require("../src/app");
 const prisma = require("../src/config/prisma");
+const bcrypt = require("bcrypt");
 
 let token;
+let adminToken;
 let testUserId;
+let adminUserId;
 
 beforeAll(async () => {
-  const response = await request(app)
+  // Login del usuario normal
+
+  const userResponse = await request(app)
     .post("/api/auth/login")
     .send({
       email: "testbackend@example.com",
       password: "Password123",
     });
 
-  expect(response.statusCode).toBe(200);
+  expect(userResponse.statusCode).toBe(200);
 
-  token = response.body.token;
+  token = userResponse.body.token;
+
+  // Crear usuario administrador para las pruebas
+
+  const adminEmail = `admin-${Date.now()}@test.com`;
+
+  const hashedPassword = await bcrypt.hash("Password123", 10);
+
+  const adminUser = await prisma.user.create({
+    data: {
+      name: "Admin Test",
+      email: adminEmail,
+      password: hashedPassword,
+      role: "ADMIN",
+    },
+  });
+
+  adminUserId = adminUser.id;
+
+  // Login del administrador
+
+  const adminResponse = await request(app)
+    .post("/api/auth/login")
+    .send({
+      email: adminEmail,
+      password: "Password123",
+    });
+
+  expect(adminResponse.statusCode).toBe(200);
+
+  adminToken = adminResponse.body.token;
 });
 
 describe("Users API", () => {
-  test("GET /api/users debe responder con una lista de usuarios", async () => {
+  test("GET /api/users debe responder con una lista de usuarios para ADMIN", async () => {
     const response = await request(app)
       .get("/api/users")
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.statusCode).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
   });
 
-  test("GET /api/users/:id debe devolver un usuario existente", async () => {
+  test("GET /api/users debe rechazar a un usuario USER", async () => {
+    const response = await request(app)
+      .get("/api/users")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body).toHaveProperty(
+      "error",
+      "No tienes permisos para realizar esta acción"
+    );
+  });
+
+  test("GET /api/users/:id debe devolver un usuario existente para ADMIN", async () => {
     const response = await request(app)
       .get("/api/users/11")
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveProperty("id", 11);
@@ -55,7 +102,7 @@ describe("Users API", () => {
   test("GET /api/users/:id debe devolver 404 si el usuario no existe", async () => {
     const response = await request(app)
       .get("/api/users/999999")
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.statusCode).toBe(404);
     expect(response.body).toHaveProperty(
@@ -173,12 +220,12 @@ describe("Users API", () => {
     );
   });
 
-  test("PUT /api/users/:id debe actualizar un usuario correctamente", async () => {
+  test("PUT /api/users/:id debe actualizar un usuario correctamente para ADMIN", async () => {
     const email = `actualizado${Date.now()}@test.com`;
 
     const response = await request(app)
       .put(`/api/users/${testUserId}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         name: "Usuario Actualizado",
         email,
@@ -189,6 +236,22 @@ describe("Users API", () => {
     expect(response.body).toHaveProperty("name", "Usuario Actualizado");
     expect(response.body).toHaveProperty("email", email);
     expect(response.body).not.toHaveProperty("password");
+  });
+
+  test("PUT /api/users/:id debe rechazar a un usuario USER", async () => {
+    const response = await request(app)
+      .put(`/api/users/${testUserId}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: "Cambio No Permitido",
+        email: `nopermitido${Date.now()}@test.com`,
+      });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body).toHaveProperty(
+      "error",
+      "No tienes permisos para realizar esta acción"
+    );
   });
 
   test("PUT /api/users/:id debe rechazar un ID inválido", async () => {
@@ -210,7 +273,7 @@ describe("Users API", () => {
   test("PUT /api/users/:id debe rechazar campos obligatorios faltantes", async () => {
     const response = await request(app)
       .put(`/api/users/${testUserId}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         name: "Usuario Actualizado",
       });
@@ -225,7 +288,7 @@ describe("Users API", () => {
   test("PUT /api/users/:id debe rechazar un email inválido", async () => {
     const response = await request(app)
       .put(`/api/users/${testUserId}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         name: "Usuario Actualizado",
         email: "email-invalido",
@@ -241,7 +304,7 @@ describe("Users API", () => {
   test("PUT /api/users/:id debe devolver 404 si el usuario no existe", async () => {
     const response = await request(app)
       .put("/api/users/999999")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         name: "Usuario Inexistente",
         email: "inexistente@test.com",
@@ -254,7 +317,7 @@ describe("Users API", () => {
     );
   });
 
-  test("DELETE /api/users/:id debe eliminar un usuario correctamente", async () => {
+  test("DELETE /api/users/:id debe eliminar un usuario correctamente para ADMIN", async () => {
     const email = `eliminar${Date.now()}@test.com`;
 
     const createResponse = await request(app)
@@ -271,12 +334,24 @@ describe("Users API", () => {
 
     const response = await request(app)
       .delete(`/api/users/${userId}`)
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveProperty(
       "message",
       "Usuario eliminado correctamente"
+    );
+  });
+
+  test("DELETE /api/users/:id debe rechazar a un usuario USER", async () => {
+    const response = await request(app)
+      .delete(`/api/users/${testUserId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body).toHaveProperty(
+      "error",
+      "No tienes permisos para realizar esta acción"
     );
   });
 
@@ -295,7 +370,7 @@ describe("Users API", () => {
   test("DELETE /api/users/:id debe devolver 404 si el usuario no existe", async () => {
     const response = await request(app)
       .delete("/api/users/999999")
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.statusCode).toBe(404);
     expect(response.body).toHaveProperty(
@@ -306,5 +381,15 @@ describe("Users API", () => {
 });
 
 afterAll(async () => {
+  // Eliminar el administrador creado exclusivamente para las pruebas
+
+  if (adminUserId) {
+    await prisma.user.delete({
+      where: {
+        id: adminUserId,
+      },
+    });
+  }
+
   await prisma.$disconnect();
 });
