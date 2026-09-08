@@ -6,13 +6,6 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validar campos obligatorios
-    if (!email || !password) {
-      return res.status(400).json({
-        error: "El email y la contraseña son obligatorios",
-      });
-    }
-
     // Buscar usuario por email
     const user = await prisma.user.findUnique({
       where: { email },
@@ -25,13 +18,14 @@ const login = async (req, res) => {
       });
     }
 
-    // Comparar contraseña con el hash almacenado
+    // Verificar que el usuario tenga una contraseña almacenada
     if (!user.password) {
       return res.status(401).json({
         error: "Credenciales inválidas",
       });
     }
 
+    // Comparar contraseña con el hash almacenado
     const passwordValid = await bcrypt.compare(password, user.password);
 
     if (!passwordValid) {
@@ -40,7 +34,7 @@ const login = async (req, res) => {
       });
     }
 
-    // Generar token
+    // Generar token JWT
     const token = jwt.sign(
       {
         userId: user.id,

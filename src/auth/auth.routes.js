@@ -4,6 +4,9 @@ const router = express.Router();
 
 const { login } = require("./auth.controller");
 
+const validate = require("../middleware/validation.middleware");
+const { loginSchema } = require("../validators/auth.validator");
+
 /**
  * @swagger
  * /api/auth/login:
@@ -47,6 +50,6 @@ const { login } = require("./auth.controller");
  *         description: Datos de entrada inválidos
  */
 
-router.post("/login", login);
+router.post("/login", validate(loginSchema), login);
 
 module.exports = router;

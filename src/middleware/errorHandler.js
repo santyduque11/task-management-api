@@ -3,6 +3,7 @@ const { ZodError } = require("zod");
 const errorHandler = (err, req, res, next) => {
   console.error(err);
 
+  // Errores de validación de Zod
   if (err instanceof ZodError) {
     const firstError = err.issues[0];
 
@@ -12,6 +13,23 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // Registro no encontrado en Prisma
+  if (err.code === "P2025") {
+    return res.status(404).json({
+      error: "Recurso no encontrado",
+      statusCode: 404,
+    });
+  }
+
+  // Registro duplicado en Prisma
+  if (err.code === "P2002") {
+    return res.status(409).json({
+      error: "El recurso ya existe",
+      statusCode: 409,
+    });
+  }
+
+  // Error HTTP personalizado
   const statusCode = err.statusCode || 500;
 
   res.status(statusCode).json({
