@@ -1,7 +1,9 @@
 const prisma = require("../config/prisma");
+
 const bcrypt = require("bcrypt");
 
 // Obtener todos los usuarios
+
 const getUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
@@ -23,11 +25,13 @@ const getUsers = async (req, res) => {
 };
 
 // Obtener un usuario por ID
+
 const getUserById = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
     // Validar que el ID sea un número válido
+
     if (Number.isNaN(id)) {
       return res.status(400).json({
         error: "El ID debe ser un número válido",
@@ -36,6 +40,7 @@ const getUserById = async (req, res) => {
 
     const user = await prisma.user.findUnique({
       where: { id },
+
       select: {
         id: true,
         name: true,
@@ -60,41 +65,17 @@ const getUserById = async (req, res) => {
 };
 
 // Crear un usuario
+
 const createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-if (!name || !email || !password) {
-  return res.status(400).json({
-    error: "El nombre, el email y la contraseña son obligatorios",
-  });
-}
-
-if (name.trim().length < 3) {
-  return res.status(400).json({
-    error: "El nombre debe tener al menos 3 caracteres",
-  });
-}
-
-if (password.length < 8) {
-  return res.status(400).json({
-    error: "La contraseña debe tener al menos 8 caracteres",
-  });
-}
-
-    // Validar formato del email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        error: "El email no tiene un formato válido",
-      });
-    }
-
     // Generar hash de la contraseña
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Crear usuario
+
     const user = await prisma.user.create({
       data: {
         name,
@@ -104,34 +85,37 @@ if (password.length < 8) {
     });
 
     // Nunca devolver la contraseña ni el hash
+
     res.status(201).json({
       id: user.id,
       name: user.name,
       email: user.email,
     });
-} catch (error) {
+  } catch (error) {
+    // Email duplicado
 
-  // Email duplicado
-  if (error.code === "P2002") {
-    return res.status(409).json({
-      error: "El correo electrónico ya está registrado",
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        error: "El correo electrónico ya está registrado",
+      });
+    }
+
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Error interno del servidor",
     });
-  }
-
-  console.error(error);
-
-  return res.status(500).json({
-    error: "Error interno del servidor",
-  });
   }
 };
 
 // Actualizar un usuario
+
 const updateUser = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
     // Validar que el ID sea un número válido
+
     if (Number.isNaN(id)) {
       return res.status(400).json({
         error: "El ID debe ser un número válido",
@@ -140,28 +124,14 @@ const updateUser = async (req, res) => {
 
     const { name, email } = req.body;
 
-    // Validar campos obligatorios
-    if (!name || !email) {
-      return res.status(400).json({
-        error: "El nombre y el email son obligatorios",
-      });
-    }
-
-    // Validar formato del email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        error: "El email no tiene un formato válido",
-      });
-    }
-
     const user = await prisma.user.update({
       where: { id },
+
       data: {
         name,
         email,
       },
+
       select: {
         id: true,
         name: true,
@@ -174,6 +144,7 @@ const updateUser = async (req, res) => {
     console.error(error);
 
     // Usuario no encontrado
+
     if (error.code === "P2025") {
       return res.status(404).json({
         error: "Usuario no encontrado",
@@ -181,6 +152,7 @@ const updateUser = async (req, res) => {
     }
 
     // Email duplicado
+
     if (error.code === "P2002") {
       return res.status(409).json({
         error: "El email ya está registrado",
@@ -194,11 +166,13 @@ const updateUser = async (req, res) => {
 };
 
 // Eliminar un usuario
+
 const deleteUser = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
     // Validar que el ID sea un número válido
+
     if (Number.isNaN(id)) {
       return res.status(400).json({
         error: "El ID debe ser un número válido",
@@ -216,6 +190,7 @@ const deleteUser = async (req, res) => {
     console.error(error);
 
     // Usuario no encontrado
+
     if (error.code === "P2025") {
       return res.status(404).json({
         error: "Usuario no encontrado",

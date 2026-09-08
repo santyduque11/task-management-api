@@ -12,6 +12,13 @@ const {
 
 const authenticateToken = require("../middleware/auth.middleware");
 
+const {
+  createUserSchema,
+  updateUserSchema,
+} = require("../validators/user.validator");
+
+const validate = require("../middleware/validation.middleware");
+
 /**
  * @swagger
  * tags:
@@ -101,7 +108,7 @@ router.get("/:id", authenticateToken, getUserById);
  *       400:
  *         description: Datos inválidos
  */
-router.post("/", createUser);
+router.post("/", validate(createUserSchema), createUser);
 
 /**
  * @swagger
@@ -149,7 +156,12 @@ router.post("/", createUser);
  *       404:
  *         description: Usuario no encontrado
  */
-router.put("/:id", authenticateToken, updateUser);
+router.put(
+  "/:id",
+  authenticateToken,
+  validate(updateUserSchema),
+  updateUser
+);
 
 /**
  * @swagger
