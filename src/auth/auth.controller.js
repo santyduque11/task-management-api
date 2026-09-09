@@ -2,7 +2,7 @@ const prisma = require("../config/prisma");
 const asyncHandler = require("../middleware/asyncHandler");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
+const env = require("../config/env");
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -36,7 +36,7 @@ const login = asyncHandler(async (req, res) => {
       email: user.email,
       role: user.role,
     },
-    process.env.JWT_SECRET,
+    env.JWT_SECRET,
     {
       expiresIn: "1h",
     }
