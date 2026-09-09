@@ -91,6 +91,8 @@ The main goal of this project is to demonstrate practical backend development sk
 - Password hashing
 - Protected resources
 - Environment variables for sensitive configuration
+- Input validation
+- Password data excluded from API responses
 
 ### Development & Quality
 
@@ -123,7 +125,7 @@ HTTP Request
  Middleware
      │
      ▼
-Controllers
+ Controllers
      │
      ▼
  Prisma ORM
@@ -219,7 +221,10 @@ task-management-api/
 │
 ├── tests/
 │   ├── auth.test.js
+│   ├── auth.middleware.test.js
+│   ├── errorHandler.test.js
 │   ├── health.test.js
+│   ├── requireRole.test.js
 │   ├── tasks.test.js
 │   └── users.test.js
 │
@@ -342,7 +347,7 @@ Docker Compose provides a complete development environment containing:
 docker compose up -d --build
 ```
 
-The API waits for PostgreSQL to become healthy before starting.
+The API depends on PostgreSQL being healthy before starting.
 
 ## 2. Check container status
 
@@ -357,7 +362,7 @@ task-management-api
 task-management-db
 ```
 
-PostgreSQL should display:
+The PostgreSQL container should report:
 
 ```text
 healthy
@@ -418,11 +423,7 @@ docker compose logs api
 docker compose down
 ```
 
-PostgreSQL data is stored in a persistent Docker volume:
-
-```text
-task-management-api_postgres_data
-```
+PostgreSQL data is stored in a persistent Docker volume.
 
 The volume allows database data to persist when the containers are stopped.
 
@@ -446,6 +447,8 @@ Example:
 ```
 
 This endpoint can be used to verify that the API is running correctly.
+
+The endpoint was also verified against the Dockerized API during the final project validation.
 
 ---
 
@@ -644,6 +647,7 @@ The test suite covers:
 - Login validation
 - Invalid credentials
 - Authentication middleware
+- Role authorization
 - Protected routes
 - Task CRUD operations
 - Task ownership authorization
@@ -652,11 +656,12 @@ The test suite covers:
 - Health check
 - Error handling
 
-Current test suite:
+### Current Test Results
 
 ```text
 Test Suites: 7 passed, 7 total
 Tests:       60 passed, 60 total
+Snapshots:   0 total
 ```
 
 ---
@@ -665,7 +670,7 @@ Tests:       60 passed, 60 total
 
 The project maintains automated code coverage using Jest.
 
-Current coverage:
+Current verified coverage:
 
 ```text
 Statements: 99.23%
@@ -673,8 +678,6 @@ Branches:   88.67%
 Functions:  100%
 Lines:      99.23%
 ```
-
-Coverage thresholds are configured to maintain a high level of automated test coverage.
 
 Run:
 
@@ -688,13 +691,17 @@ The generated report is available in:
 coverage/
 ```
 
+The project intentionally does not pursue artificial 100% coverage when doing so would only add tests without meaningful value.
+
 ---
 
-# 🔄 CI/CD
+# 🔄 Continuous Integration
 
-The project uses **GitHub Actions** to automatically run the test suite.
+The project uses **GitHub Actions** for continuous integration.
 
-The CI workflow:
+The CI workflow performs automated validation when changes are pushed or submitted through pull requests.
+
+The workflow includes:
 
 ```text
 GitHub Push / Pull Request
@@ -706,25 +713,25 @@ GitHub Push / Pull Request
     Setup Node.js
           │
           ▼
-     PostgreSQL
+      PostgreSQL
           │
           ▼
-   Prisma Migrations
+  Prisma Migrations
           │
           ▼
-      Test Seed
+       Test Seed
           │
           ▼
-       Jest Tests
+      Jest Tests
 ```
-
-The CI environment uses PostgreSQL and executes the database migrations and automated tests before considering the workflow successful.
 
 Workflow file:
 
 ```text
 .github/workflows/ci.yml
 ```
+
+The CI environment uses PostgreSQL and executes database migrations and automated tests.
 
 ---
 
@@ -740,45 +747,40 @@ The API implements several security practices:
 - CORS configuration
 - Rate limiting
 - Environment variables for sensitive configuration
-- Input validation
+- Input validation with Zod
 - Centralized error handling
 - Database error handling
-- No password or password hash returned in API responses
+- Password data excluded from API responses
+- Automated security-related tests
 
 ---
 
 # ⚠️ Dependency Audit
 
-The project has been reviewed using `npm audit`.
+The project was reviewed using `npm audit`.
 
-At the current dependency versions, `npm audit` reports **4 high-severity vulnerabilities in transitive dependencies related to Prisma**.
+At the current dependency versions, `npm audit` reports:
 
-These findings are located in the project's dependency tree rather than in code written directly by the application.
+```text
+4 high severity vulnerabilities
+```
 
-The project intentionally does not use:
+The reported issues are associated with transitive dependencies in the Prisma dependency tree, including:
 
-```bash
+- `deepmerge-ts`
+- `mysql2`
+
+The available automatic fix requires:
+
+```text
 npm audit fix --force
 ```
 
-because forcing dependency changes could introduce breaking changes or upgrade Prisma to an unstable release-candidate version.
+However, the forced fix would perform a breaking Prisma version change to `prisma@6.19.3`.
 
-The issue is documented and will be reassessed when a stable dependency update addressing the affected transitive packages becomes available.
+The project therefore does **not** use `npm audit fix --force`, since the current application is running successfully on Prisma 7 and forcing a major dependency downgrade could introduce breaking changes.
 
-### Security practices implemented
-
-Despite the dependency audit findings, the API implements several application-level security measures:
-
-- Helmet security headers
-- CORS configuration
-- Rate limiting
-- JWT authentication
-- Role-based authorization
-- Password hashing with bcrypt
-- Zod input validation
-- Environment variables for sensitive configuration
-- Centralized error handling
-- Automated security-related tests
+The dependency audit finding is documented and should be reassessed when a compatible stable update becomes available.
 
 ---
 
@@ -919,7 +921,7 @@ Check formatting without modifying files:
 npm run format:check
 ```
 
-The project is configured with ESLint and Prettier rules to maintain consistent JavaScript code style.
+The current project passes the configured ESLint and Prettier checks.
 
 ---
 
@@ -957,7 +959,7 @@ This project was developed as a backend portfolio project to demonstrate practic
 - Error handling
 - Docker
 - Docker Compose
-- CI/CD
+- Continuous integration
 - Code quality
 - Git and GitHub
 
@@ -1002,12 +1004,12 @@ Possible future improvements include:
 
 - Refresh token authentication
 - More advanced role and permission management
-- Production cloud deployment
-- Production environment configuration
-- Automated deployment pipelines
 - Additional integration and performance tests
 - Docker image optimization
 - Monitoring and observability improvements
+- Further production infrastructure improvements
+
+These items are outside the current scope of the completed project.
 
 ---
 
@@ -1015,7 +1017,7 @@ Possible future improvements include:
 
 ## Santiago Llano Duque
 
-Backend Development Junior
+**Backend Development Junior**
 
 GitHub:
 
