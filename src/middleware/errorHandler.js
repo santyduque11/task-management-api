@@ -1,7 +1,14 @@
 const { ZodError } = require("zod");
+const logger = require("../config/logger");
 
 const errorHandler = (err, req, res, next) => {
-  console.error(err);
+  logger.error("Error en la API", {
+    message: err.message,
+    stack: err.stack,
+    code: err.code,
+    path: req.originalUrl,
+    method: req.method,
+  });
 
   // Errores de validación de Zod
   if (err instanceof ZodError) {
