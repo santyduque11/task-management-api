@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
+
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -30,7 +31,7 @@ const authenticateToken = (req, res, next) => {
 
     // Continuar hacia el controlador
     next();
-  } catch (error) {
+  } catch {
     const authError = new Error("Token inválido o expirado");
     authError.statusCode = 401;
 

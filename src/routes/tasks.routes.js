@@ -12,13 +12,9 @@ const {
   taskIdSchema,
 } = require("../validators/task.validator");
 
-const {
-  paginationSchema,
-} = require("../validators/pagination.validator");
+const { paginationSchema } = require("../validators/pagination.validator");
 
-const {
-  taskFilterSchema,
-} = require("../validators/task-filter.validator");
+const { taskFilterSchema } = require("../validators/task-filter.validator");
 
 const taskQuerySchema = paginationSchema.merge(taskFilterSchema);
 
@@ -84,11 +80,7 @@ router.use(authenticateToken);
  *       401:
  *         description: No autorizado. Se requiere un token JWT.
  */
-router.get(
-  "/",
-  validate(taskQuerySchema, "query"),
-  getTasks
-);
+router.get("/", validate(taskQuerySchema, "query"), getTasks);
 
 /**
  * @swagger
@@ -118,11 +110,7 @@ router.get(
  *       404:
  *         description: Tarea no encontrada
  */
-router.get(
-  "/:id",
-  validate(taskIdSchema, "params"),
-  getTaskById
-);
+router.get("/:id", validate(taskIdSchema, "params"), getTaskById);
 
 /**
  * @swagger
@@ -158,11 +146,7 @@ router.get(
  *       401:
  *         description: No autorizado. Se requiere un token JWT.
  */
-router.post(
-  "/",
-  validate(createTaskSchema),
-  createTask
-);
+router.post("/", validate(createTaskSchema), createTask);
 
 /**
  * @swagger
@@ -243,10 +227,6 @@ router.put(
  *       404:
  *         description: Tarea no encontrada
  */
-router.delete(
-  "/:id",
-  validate(taskIdSchema, "params"),
-  deleteTask
-);
+router.delete("/:id", validate(taskIdSchema, "params"), deleteTask);
 
 module.exports = router;

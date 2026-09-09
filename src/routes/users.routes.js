@@ -44,12 +44,7 @@ const validate = require("../middleware/validation.middleware");
  *       401:
  *         description: No autorizado. Se requiere un token JWT.
  */
-router.get(
-  "/",
-  authenticateToken,
-  requireRole("ADMIN"),
-  getUsers
-);
+router.get("/", authenticateToken, requireRole("ADMIN"), getUsers);
 
 /**
  * @swagger

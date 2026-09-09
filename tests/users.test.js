@@ -11,12 +11,10 @@ let adminUserId;
 beforeAll(async () => {
   // Login del usuario normal
 
-  const userResponse = await request(app)
-    .post("/api/auth/login")
-    .send({
-      email: "testbackend@example.com",
-      password: "Password123",
-    });
+  const userResponse = await request(app).post("/api/auth/login").send({
+    email: "testbackend@example.com",
+    password: "Password123",
+  });
 
   expect(userResponse.statusCode).toBe(200);
 
@@ -41,12 +39,10 @@ beforeAll(async () => {
 
   // Login del administrador
 
-  const adminResponse = await request(app)
-    .post("/api/auth/login")
-    .send({
-      email: adminEmail,
-      password: "Password123",
-    });
+  const adminResponse = await request(app).post("/api/auth/login").send({
+    email: adminEmail,
+    password: "Password123",
+  });
 
   expect(adminResponse.statusCode).toBe(200);
 
@@ -105,10 +101,7 @@ describe("Users API", () => {
       .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.statusCode).toBe(404);
-    expect(response.body).toHaveProperty(
-      "error",
-      "Usuario no encontrado"
-    );
+    expect(response.body).toHaveProperty("error", "Usuario no encontrado");
   });
 
   test("POST /api/users debe crear un usuario correctamente", async () => {
@@ -133,11 +126,9 @@ describe("Users API", () => {
   });
 
   test("POST /api/users debe rechazar datos obligatorios faltantes", async () => {
-    const response = await request(app)
-      .post("/api/users")
-      .send({
-        name: "Usuario Test",
-      });
+    const response = await request(app).post("/api/users").send({
+      name: "Usuario Test",
+    });
 
     expect(response.statusCode).toBe(400);
     expect(response.body).toHaveProperty(
@@ -179,13 +170,11 @@ describe("Users API", () => {
   });
 
   test("POST /api/users debe rechazar un correo electrónico inválido", async () => {
-    const response = await request(app)
-      .post("/api/users")
-      .send({
-        name: "Usuario Test",
-        email: "correo-invalido",
-        password: "Password123",
-      });
+    const response = await request(app).post("/api/users").send({
+      name: "Usuario Test",
+      email: "correo-invalido",
+      password: "Password123",
+    });
 
     expect(response.statusCode).toBe(400);
     expect(response.body).toHaveProperty(
@@ -197,21 +186,17 @@ describe("Users API", () => {
   test("POST /api/users debe rechazar un correo duplicado", async () => {
     const email = `duplicado${Date.now()}@test.com`;
 
-    await request(app)
-      .post("/api/users")
-      .send({
-        name: "Usuario Original",
-        email,
-        password: "Password123",
-      });
+    await request(app).post("/api/users").send({
+      name: "Usuario Original",
+      email,
+      password: "Password123",
+    });
 
-    const response = await request(app)
-      .post("/api/users")
-      .send({
-        name: "Usuario Duplicado",
-        email,
-        password: "Password123",
-      });
+    const response = await request(app).post("/api/users").send({
+      name: "Usuario Duplicado",
+      email,
+      password: "Password123",
+    });
 
     expect(response.statusCode).toBe(409);
     expect(response.body).toHaveProperty(
@@ -311,22 +296,17 @@ describe("Users API", () => {
       });
 
     expect(response.statusCode).toBe(404);
-    expect(response.body).toHaveProperty(
-      "error",
-      "Usuario no encontrado"
-    );
+    expect(response.body).toHaveProperty("error", "Usuario no encontrado");
   });
 
   test("DELETE /api/users/:id debe eliminar un usuario correctamente para ADMIN", async () => {
     const email = `eliminar${Date.now()}@test.com`;
 
-    const createResponse = await request(app)
-      .post("/api/users")
-      .send({
-        name: "Usuario Eliminar",
-        email,
-        password: "Password123",
-      });
+    const createResponse = await request(app).post("/api/users").send({
+      name: "Usuario Eliminar",
+      email,
+      password: "Password123",
+    });
 
     expect(createResponse.statusCode).toBe(201);
 
@@ -373,10 +353,7 @@ describe("Users API", () => {
       .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.statusCode).toBe(404);
-    expect(response.body).toHaveProperty(
-      "error",
-      "Usuario no encontrado"
-    );
+    expect(response.body).toHaveProperty("error", "Usuario no encontrado");
   });
 });
 

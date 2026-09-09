@@ -31,9 +31,7 @@ const userIdSchema = z.object({
 });
 
 module.exports = {
-
   createUserSchema,
   updateUserSchema,
   userIdSchema,
-
 };

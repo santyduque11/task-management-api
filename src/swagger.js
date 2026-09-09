@@ -6,7 +6,8 @@ const options = {
     info: {
       title: "Task Management API",
       version: "1.0.0",
-      description: "API REST para gestionar usuarios y tareas con autenticación JWT",
+      description:
+        "API REST para gestionar usuarios y tareas con autenticación JWT",
     },
     servers: [
       {

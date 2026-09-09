@@ -8,9 +8,7 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
 
-  transports: [
-    new winston.transports.Console(),
-  ],
+  transports: [new winston.transports.Console()],
 });
 
 module.exports = logger;

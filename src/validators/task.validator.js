@@ -10,7 +10,6 @@ const createTaskSchema = z.object({
     .string("La descripción debe ser un texto")
     .max(1000, "La descripción no puede superar los 1000 caracteres")
     .optional(),
-
 });
 
 const updateTaskSchema = z.object({
@@ -24,9 +23,7 @@ const updateTaskSchema = z.object({
     .max(1000, "La descripción no puede superar los 1000 caracteres")
     .optional(),
 
-  completed: z
-    .boolean("El campo completed debe ser true o false"),
-
+  completed: z.boolean("El campo completed debe ser true o false"),
 });
 
 const taskIdSchema = z.object({
