@@ -33,4 +33,5 @@ jobs:
       - name: Run tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/task_management_test
+          JWT_SECRET: ci-test-secret-do-not-use-in-production-123456
         run: npm test
