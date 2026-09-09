@@ -1,4 +1,5 @@
 const express = require("express");
+const helmet = require("helmet");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
 
@@ -9,6 +10,8 @@ const authRoutes = require("./auth/auth.routes");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
+
+app.use(helmet());
 
 app.use(express.json());
 
