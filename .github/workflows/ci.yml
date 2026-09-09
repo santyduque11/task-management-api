@@ -12,6 +12,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/task_management_test
+
     steps:
       - name: Descargar código
         uses: actions/checkout@v4
