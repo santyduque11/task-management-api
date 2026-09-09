@@ -38,6 +38,8 @@ jobs:
           cache: npm
 
       - name: Install dependencies
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/task_management_test
         run: npm ci
 
       - name: Generate Prisma Client
@@ -49,6 +51,11 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/task_management_test
         run: npx prisma migrate deploy
+
+      - name: Seed test database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/task_management_test
+        run: node prisma/seed.js
 
       - name: Run tests
         env:
