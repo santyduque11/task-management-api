@@ -1,10 +1,10 @@
 # Task Management API
 
-REST API for task and user management built with Node.js, Express, PostgreSQL and Prisma.
+REST API for task and user management built with **Node.js, Express, PostgreSQL and Prisma**.
 
-This project implements user registration, secure password hashing, JWT authentication, protected routes, task authorization, input validation, automated testing, Swagger/OpenAPI documentation and Docker containerization.
+This project implements user registration, secure password hashing, JWT authentication, role-based authorization, protected routes, task ownership validation, input validation, pagination and filtering, centralized error handling, automated testing, code coverage, Swagger/OpenAPI documentation, Docker containerization, Docker Compose and continuous integration with GitHub Actions.
 
-The main goal of this project is to demonstrate backend development practices including RESTful API design, authentication and authorization, relational database modeling, error handling, automated testing, API documentation and containerized development.
+The main goal of this project is to demonstrate practical backend development skills and software engineering practices used in real-world API development.
 
 ---
 
@@ -15,43 +15,153 @@ The main goal of this project is to demonstrate backend development practices in
 - PostgreSQL
 - Prisma ORM
 - JavaScript
+- Zod
 - bcrypt
 - JSON Web Token (JWT)
 - Swagger / OpenAPI
 - Jest
 - Supertest
-- Nodemon
+- Winston
+- Helmet
+- CORS
+- express-rate-limit
+- ESLint
+- Prettier
 - Docker
 - Docker Compose
+- GitHub Actions
+- Git / GitHub
 
 ---
 
 ## 📋 Features
 
+### Authentication & Authorization
+
 - User registration
-- User CRUD operations
-- Task CRUD operations
-- PostgreSQL database
-- Prisma ORM
-- User-task relationships
-- Password hashing with bcrypt
 - JWT authentication
-- Authentication middleware
+- Secure password hashing with bcrypt
 - Protected routes
-- User-based task authorization
-- Input validation
-- Email format validation
+- Authentication middleware
+- Role-based authorization
+- User roles: `USER` and `ADMIN`
+- Invalid credential handling
+- Invalid and expired JWT handling
+- Task ownership authorization
+
+### Users
+
+- Create users
+- Retrieve users
+- Retrieve users by ID
+- Update users
+- Delete users
+- Email uniqueness validation
 - Duplicate email handling
-- Invalid credentials handling
-- Database error handling
+- Password protection
+
+### Tasks
+
+- Create tasks
+- Retrieve authenticated user's tasks
+- Retrieve tasks by ID
+- Update tasks
+- Delete tasks
+- Task ownership validation
+- Pagination
+- Filtering by completion status
+
+### Validation & Error Handling
+
+- Request validation with Zod
+- Email format validation
+- Required field validation
+- ID validation
+- Centralized error handling
+- Prisma database error handling
 - HTTP status code management
-- Environment variables
-- Automated API tests
+- Structured API error responses
+
+### Security
+
+- Helmet security headers
+- CORS configuration
+- Rate limiting
+- JWT authentication
+- Password hashing
+- Protected resources
+- Environment variables for sensitive configuration
+
+### Development & Quality
+
+- Automated API testing
+- Jest and Supertest
+- Code coverage
+- ESLint
+- Prettier
 - Swagger/OpenAPI documentation
-- Prisma database migrations
+- Prisma migrations
+- Database seed script
+- GitHub Actions CI
 - Docker containerization
-- Docker Compose development environment
-- Organized project structure
+- Docker Compose
+- PostgreSQL health checks
+
+---
+
+## 🏗️ Architecture
+
+The application follows a layered backend architecture:
+
+```text
+HTTP Request
+     │
+     ▼
+   Routes
+     │
+     ▼
+ Middleware
+     │
+     ▼
+Controllers
+     │
+     ▼
+ Prisma ORM
+     │
+     ▼
+ PostgreSQL
+```
+
+### Routes
+
+Routes define the API endpoints and connect incoming requests with the appropriate middleware and controllers.
+
+### Middleware
+
+Middleware handles cross-cutting concerns such as:
+
+- JWT authentication
+- Request validation
+- Role authorization
+- Error handling
+- Rate limiting
+- Security headers
+
+### Controllers
+
+Controllers contain the application logic for:
+
+- Users
+- Authentication
+- Tasks
+
+### Prisma
+
+Prisma provides the database access layer and manages communication between the application and PostgreSQL.
+
+### PostgreSQL
+
+PostgreSQL stores users, tasks and their relationships.
 
 ---
 
@@ -60,12 +170,16 @@ The main goal of this project is to demonstrate backend development practices in
 ```text
 task-management-api/
 │
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+│
 ├── prisma/
 │   ├── migrations/
 │   │   ├── 20260908161832_init/
-│   │   │   └── migration.sql
-│   │   └── migration_lock.toml
-│   └── schema.prisma
+│   │   └── 20260908231621_add_user_roles/
+│   ├── schema.prisma
+│   └── seed.js
 │
 ├── src/
 │   ├── auth/
@@ -73,6 +187,8 @@ task-management-api/
 │   │   └── auth.routes.js
 │   │
 │   ├── config/
+│   │   ├── env.js
+│   │   ├── logger.js
 │   │   └── prisma.js
 │   │
 │   ├── controllers/
@@ -80,11 +196,22 @@ task-management-api/
 │   │   └── users.controller.js
 │   │
 │   ├── middleware/
-│   │   └── auth.middleware.js
+│   │   ├── asyncHandler.js
+│   │   ├── auth.middleware.js
+│   │   ├── errorHandler.js
+│   │   ├── requireRole.js
+│   │   └── validation.middleware.js
 │   │
 │   ├── routes/
 │   │   ├── tasks.routes.js
 │   │   └── users.routes.js
+│   │
+│   ├── validators/
+│   │   ├── auth.validator.js
+│   │   ├── pagination.validator.js
+│   │   ├── task-filter.validator.js
+│   │   ├── task.validator.js
+│   │   └── user.validator.js
 │   │
 │   ├── app.js
 │   ├── server.js
@@ -92,14 +219,18 @@ task-management-api/
 │
 ├── tests/
 │   ├── auth.test.js
+│   ├── health.test.js
 │   ├── tasks.test.js
 │   └── users.test.js
 │
 ├── .dockerignore
 ├── .env.example
 ├── .gitignore
+├── .prettierignore
+├── .prettierrc
 ├── docker-compose.yml
 ├── Dockerfile
+├── eslint.config.js
 ├── package.json
 ├── package-lock.json
 ├── prisma.config.ts
@@ -116,8 +247,19 @@ Example:
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/task_management?schema=public"
-JWT_SECRET="your-secret-key"
+JWT_SECRET="your-secret-key-with-at-least-32-characters"
+PORT=3000
 ```
+
+The application validates environment variables using Zod.
+
+Required variables:
+
+| Variable       | Description                           |
+| -------------- | ------------------------------------- |
+| `DATABASE_URL` | PostgreSQL database connection string |
+| `JWT_SECRET`   | Secret used to sign JWT tokens        |
+| `PORT`         | API port                              |
 
 Never upload your `.env` file, database credentials or JWT secrets to GitHub.
 
@@ -169,48 +311,59 @@ npx prisma generate
 npx prisma migrate deploy
 ```
 
-For development, when creating a new migration:
+## 7. Start the development server
 
 ```bash
-npx prisma migrate dev --name migration_name
+npm run dev
+```
+
+The API will be available at:
+
+```text
+http://localhost:3000
 ```
 
 ---
 
 # 🐳 Running with Docker
 
-Docker Compose provides a complete development environment with:
+Docker Compose provides a complete development environment containing:
 
 - Node.js API
 - PostgreSQL database
 - Prisma ORM
 - Docker networking
 - Persistent PostgreSQL storage
+- PostgreSQL health checks
 
-## 1. Build the Docker image
-
-```bash
-docker compose build
-```
-
-## 2. Start the containers
+## 1. Build and start the containers
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
-## 3. Check container status
+The API waits for PostgreSQL to become healthy before starting.
+
+## 2. Check container status
 
 ```bash
 docker compose ps
 ```
 
-The expected services are:
+Expected services:
 
 ```text
 task-management-api
 task-management-db
 ```
+
+PostgreSQL should display:
+
+```text
+healthy
+```
+
+## 3. API
 
 The API is available at:
 
@@ -218,49 +371,87 @@ The API is available at:
 http://localhost:3000
 ```
 
-PostgreSQL is exposed on:
+## 4. Health Check
+
+```text
+GET /health
+```
+
+Example response:
+
+```json
+{
+  "status": "ok",
+  "message": "Task Management API is running"
+}
+```
+
+## 5. PostgreSQL
+
+PostgreSQL is exposed locally on:
 
 ```text
 localhost:5433
 ```
 
-Inside the Docker network, the API connects to PostgreSQL using:
+Inside the Docker network, the API connects to PostgreSQL through:
 
 ```text
 postgres:5432
 ```
 
-## 4. Apply database migrations
+## 6. Apply database migrations
 
 ```bash
 docker compose exec api npx prisma migrate deploy
 ```
 
-## 5. View API logs
+## 7. View API logs
 
 ```bash
 docker compose logs api
 ```
 
-## 6. Stop the containers
+## 8. Stop the containers
 
 ```bash
 docker compose down
 ```
 
-The PostgreSQL data is stored in a Docker volume named:
+PostgreSQL data is stored in a persistent Docker volume:
 
 ```text
 task-management-api_postgres_data
 ```
 
-This allows the database data to persist when containers are stopped.
+The volume allows database data to persist when the containers are stopped.
+
+---
+
+# ❤️ Health Check
+
+The API exposes a health endpoint:
+
+```text
+GET /health
+```
+
+Example:
+
+```json
+{
+  "status": "ok",
+  "message": "Task Management API is running"
+}
+```
+
+This endpoint can be used to verify that the API is running correctly.
 
 ---
 
 # 📚 API Documentation
 
-This project includes interactive API documentation using Swagger/OpenAPI.
+The project includes interactive API documentation using Swagger/OpenAPI.
 
 After starting the API, open:
 
@@ -307,13 +498,17 @@ Protected Resource
 
 Protected endpoints require a valid JWT token.
 
-Swagger provides an `Authorize` button that can be used to authenticate requests.
+The JWT contains information about the authenticated user, including:
+
+- User ID
+- Email
+- Role
+
+Swagger provides an `Authorize` button for authenticated requests.
 
 ---
 
 # 👤 Users API
-
-Main endpoints:
 
 | Method | Endpoint         | Authentication |
 | ------ | ---------------- | -------------- |
@@ -323,11 +518,50 @@ Main endpoints:
 | PUT    | `/api/users/:id` | Yes            |
 | DELETE | `/api/users/:id` | Yes            |
 
+### Register User
+
+```text
+POST /api/users
+```
+
+Example request:
+
+```json
+{
+  "name": "Santiago",
+  "email": "santiago@example.com",
+  "password": "Password123"
+}
+```
+
+---
+
+# 🔑 Authentication API
+
+| Method | Endpoint          | Authentication |
+| ------ | ----------------- | -------------- |
+| POST   | `/api/auth/login` | No             |
+
+### Login
+
+```text
+POST /api/auth/login
+```
+
+Example request:
+
+```json
+{
+  "email": "santiago@example.com",
+  "password": "Password123"
+}
+```
+
+Successful authentication returns a JWT token.
+
 ---
 
 # 📋 Tasks API
-
-Main endpoints:
 
 | Method | Endpoint         | Authentication |
 | ------ | ---------------- | -------------- |
@@ -337,13 +571,47 @@ Main endpoints:
 | PUT    | `/api/tasks/:id` | Yes            |
 | DELETE | `/api/tasks/:id` | Yes            |
 
-Tasks are associated with users and protected by authorization rules.
+Tasks are associated with authenticated users.
+
+A user can only access, modify or delete tasks that belong to that user.
+
+---
+
+## Pagination and Filtering
+
+The tasks endpoint supports pagination and filtering.
+
+Example:
+
+```text
+GET /api/tasks?page=1&limit=10
+```
+
+Filter completed tasks:
+
+```text
+GET /api/tasks?completed=true
+```
+
+The response includes pagination information:
+
+```json
+{
+  "data": [],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 0,
+    "totalPages": 0
+  }
+}
+```
 
 ---
 
 # 🧪 Testing
 
-The project uses Jest and Supertest for automated API testing.
+The project uses **Jest** and **Supertest** for automated API testing.
 
 Run all tests:
 
@@ -363,7 +631,7 @@ Generate the coverage report:
 npm run test:coverage
 ```
 
-The project currently contains automated tests for:
+The test suite covers:
 
 - User registration
 - User retrieval
@@ -375,51 +643,161 @@ The project currently contains automated tests for:
 - Authentication
 - Login validation
 - Invalid credentials
-- Task CRUD operations
 - Authentication middleware
 - Protected routes
-
----
-
-# 📊 Test Coverage
-
-The project has automated test coverage for the main API functionality.
+- Task CRUD operations
+- Task ownership authorization
+- Pagination
+- Task filtering
+- Health check
+- Error handling
 
 Current test suite:
 
 ```text
-Test Suites: 3 passed
-Tests:       33 passed
-```
-
-Coverage is approximately:
-
-```text
-Statements: 85%
-Branches:   76%
-Functions:  100%
-Lines:      85%
+Test Suites: 7 passed, 7 total
+Tests:       60 passed, 60 total
 ```
 
 ---
 
-# 🛡️ Validation and Error Handling
+# 📊 Code Coverage
 
-The API handles different validation and error scenarios, including:
+The project maintains automated code coverage using Jest.
+
+Current coverage:
+
+```text
+Statements: 99.23%
+Branches:   88.67%
+Functions:  100%
+Lines:      99.23%
+```
+
+Coverage thresholds are configured to maintain a high level of automated test coverage.
+
+Run:
+
+```bash
+npm run test:coverage
+```
+
+The generated report is available in:
+
+```text
+coverage/
+```
+
+---
+
+# 🔄 CI/CD
+
+The project uses **GitHub Actions** to automatically run the test suite.
+
+The CI workflow:
+
+```text
+GitHub Push / Pull Request
+          │
+          ▼
+     GitHub Actions
+          │
+          ▼
+    Setup Node.js
+          │
+          ▼
+     PostgreSQL
+          │
+          ▼
+   Prisma Migrations
+          │
+          ▼
+      Test Seed
+          │
+          ▼
+       Jest Tests
+```
+
+The CI environment uses PostgreSQL and executes the database migrations and automated tests before considering the workflow successful.
+
+Workflow file:
+
+```text
+.github/workflows/ci.yml
+```
+
+---
+
+# 🛡️ Security
+
+The API implements several security practices:
+
+- Password hashing with bcrypt
+- JWT authentication
+- Protected routes
+- Role-based authorization
+- Helmet security headers
+- CORS configuration
+- Rate limiting
+- Environment variables for sensitive configuration
+- Input validation
+- Centralized error handling
+- Database error handling
+- No password or password hash returned in API responses
+
+---
+
+# ⚠️ Dependency Audit
+
+The project has been reviewed using `npm audit`.
+
+At the current dependency versions, `npm audit` reports **4 high-severity vulnerabilities in transitive dependencies related to Prisma**.
+
+These findings are located in the project's dependency tree rather than in code written directly by the application.
+
+The project intentionally does not use:
+
+```bash
+npm audit fix --force
+```
+
+because forcing dependency changes could introduce breaking changes or upgrade Prisma to an unstable release-candidate version.
+
+The issue is documented and will be reassessed when a stable dependency update addressing the affected transitive packages becomes available.
+
+### Security practices implemented
+
+Despite the dependency audit findings, the API implements several application-level security measures:
+
+- Helmet security headers
+- CORS configuration
+- Rate limiting
+- JWT authentication
+- Role-based authorization
+- Password hashing with bcrypt
+- Zod input validation
+- Environment variables for sensitive configuration
+- Centralized error handling
+- Automated security-related tests
+
+---
+
+# 🧩 Validation and Error Handling
+
+Request validation is implemented using **Zod**.
+
+The API validates:
 
 - Required fields
-- Invalid email format
-- Duplicate emails
-- Invalid IDs
-- Invalid login credentials
-- Missing authentication tokens
-- Invalid JWT tokens
-- Expired JWT tokens
-- Unauthorized access
-- Non-existent users
-- Non-existent tasks
-- Database errors
-- HTTP status codes
+- Email format
+- Password requirements
+- Task fields
+- User fields
+- Pagination parameters
+- Task filters
+- Resource IDs
+
+The centralized error handler manages application and database errors.
 
 ---
 
@@ -429,63 +807,21 @@ The API handles different validation and error scenarios, including:
 | ----------- | ---------------------------------------------- |
 | 200         | Request successful                             |
 | 201         | Resource created successfully                  |
-| 400         | Invalid request                                |
+| 400         | Invalid request or validation error            |
 | 401         | Authentication required or invalid credentials |
 | 403         | Access denied                                  |
 | 404         | Resource not found                             |
-| 409         | Conflict                                       |
+| 409         | Resource conflict                              |
+| 429         | Too many requests                              |
 | 500         | Internal server error                          |
 
 ---
 
-# 🏗️ Architecture
+# 🗄️ Database Model
 
-The application follows a layered backend architecture:
+The application uses PostgreSQL with Prisma ORM.
 
-```text
-                    HTTP Request
-                         │
-                         ▼
-                       Routes
-                         │
-                         ▼
-                    Middleware
-                         │
-                         ▼
-                    Controllers
-                         │
-                         ▼
-                    Prisma ORM
-                         │
-                         ▼
-                     PostgreSQL
-```
-
-### Routes
-
-Routes define API endpoints and connect incoming requests with the appropriate controllers.
-
-### Middleware
-
-The authentication middleware validates JWT tokens before allowing access to protected resources.
-
-### Controllers
-
-Controllers contain the application logic for users, authentication and tasks.
-
-### Prisma
-
-Prisma ORM provides the database access layer and handles communication with PostgreSQL.
-
-### PostgreSQL
-
-PostgreSQL stores users, tasks and their relationships.
-
----
-
-# 🗄️ Database Relationship
-
-The project uses a one-to-many relationship between users and tasks.
+Main entities:
 
 ```text
 User
@@ -498,17 +834,92 @@ User
 Task
 ```
 
-Each task belongs to one user, while a user can have multiple tasks.
+A user can have multiple tasks, while each task belongs to one user.
 
-The relationship is represented through:
+### User
 
 ```text
 User
- └── tasks[]
-
-Task
- └── userId
+├── id
+├── name
+├── email
+├── password
+├── role
+└── tasks[]
 ```
+
+### Task
+
+```text
+Task
+├── id
+├── title
+├── description
+├── completed
+├── createdAt
+├── updatedAt
+├── userId
+└── user
+```
+
+The relationship uses a foreign key:
+
+```text
+Task.userId → User.id
+```
+
+Tasks are configured with cascading deletion when their associated user is deleted.
+
+---
+
+# 📦 Prisma Migrations
+
+Database changes are managed using Prisma migrations.
+
+Current migrations include:
+
+```text
+20260908161832_init
+20260908231621_add_user_roles
+```
+
+Apply migrations:
+
+```bash
+npx prisma migrate deploy
+```
+
+Create a development migration:
+
+```bash
+npx prisma migrate dev --name migration_name
+```
+
+---
+
+# 🧹 Code Quality
+
+The project uses **ESLint** and **Prettier** to maintain consistent and reliable code.
+
+Run ESLint:
+
+```bash
+npm run lint
+```
+
+Format the project:
+
+```bash
+npm run format
+```
+
+Check formatting without modifying files:
+
+```bash
+npm run format:check
+```
+
+The project is configured with ESLint and Prettier rules to maintain consistent JavaScript code style.
 
 ---
 
@@ -520,7 +931,10 @@ Task
 | `npm start`             | Start production server               |
 | `npm test`              | Run automated tests                   |
 | `npm run test:watch`    | Run tests in watch mode               |
-| `npm run test:coverage` | Generate test coverage report         |
+| `npm run test:coverage` | Generate code coverage                |
+| `npm run lint`          | Run ESLint                            |
+| `npm run format`        | Format project with Prettier          |
+| `npm run format:check`  | Check Prettier formatting             |
 
 ---
 
@@ -531,18 +945,23 @@ This project was developed as a backend portfolio project to demonstrate practic
 - REST API development
 - Backend architecture
 - Authentication and authorization
-- Database design
+- JWT
 - PostgreSQL
 - Prisma ORM
+- Relational database modeling
 - API security
+- Input validation
 - Automated testing
+- Code coverage
 - API documentation
 - Error handling
 - Docker
 - Docker Compose
-- Database migrations
+- CI/CD
+- Code quality
 - Git and GitHub
-- Clean project organization
+
+The project is designed to demonstrate not only the ability to create endpoints, but also the ability to structure, test, validate, secure and maintain a backend application.
 
 ---
 
@@ -550,54 +969,51 @@ This project was developed as a backend portfolio project to demonstrate practic
 
 Through this project, I practiced:
 
-- Building REST APIs with Node.js
-- Working with Express.js
+- Building REST APIs with Node.js and Express
+- Designing backend application architecture
 - Creating CRUD operations
 - Connecting applications to PostgreSQL
 - Using Prisma ORM
-- Modeling database relationships
-- Structuring controllers and routes
-- Implementing authentication with JWT
+- Modeling relational databases
+- Creating database migrations
+- Implementing JWT authentication
 - Hashing passwords with bcrypt
 - Creating authentication middleware
-- Protecting API resources
-- Implementing user-based authorization
-- Validating user input
+- Implementing authorization rules
+- Protecting user-owned resources
+- Validating requests with Zod
 - Handling database errors
-- Working with HTTP status codes
+- Implementing centralized error handling
 - Writing automated API tests
+- Measuring code coverage
 - Documenting APIs with Swagger/OpenAPI
-- Using environment variables
-- Creating Prisma migrations
-- Containerizing applications with Docker
-- Managing services with Docker Compose
-- Working with persistent Docker volumes
+- Implementing API security practices
+- Using Docker and Docker Compose
+- Configuring PostgreSQL health checks
+- Creating CI workflows with GitHub Actions
+- Maintaining code quality with ESLint and Prettier
 - Using Git and GitHub for version control
 
 ---
 
 # 🚀 Future Improvements
 
-Planned improvements for future versions include:
+Possible future improvements include:
 
-- Request validation with a dedicated validation library
-- Pagination and filtering for tasks
 - Refresh token authentication
-- Role-based authorization
-- Improved centralized error handling
-- Database seed scripts
-- CI/CD with GitHub Actions
-- API deployment to a cloud platform
+- More advanced role and permission management
+- Production cloud deployment
 - Production environment configuration
-- Improved test coverage
-- Production Docker image optimization
-- Health checks for Docker services
+- Automated deployment pipelines
+- Additional integration and performance tests
+- Docker image optimization
+- Monitoring and observability improvements
 
 ---
 
 # 👨‍💻 Author
 
-**Santiago Llano Duque**
+## Santiago Llano Duque
 
 Backend Development Junior
 
